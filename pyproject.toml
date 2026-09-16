@@ -1,0 +1,10 @@
+[project]
+name = "robbie-agent"
+version = "0.1.0"
+description = "A minimal Python agent starter project"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

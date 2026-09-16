@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#020711" />
+    <title>MYSTIX // DEMO</title>
+    <link rel="stylesheet" href="src/styles.css" />
+  </head>
+  <body>
+    <main class="demo-frame" id="demoFrame">
+      <canvas id="starfield" aria-hidden="true"></canvas>
+      <div class="crt-lines" aria-hidden="true"></div>
+      <div class="decompression-screen" id="decompressionScreen" aria-hidden="true"></div>
+      <section class="logo-stage" aria-label="MYSTIX demo logo">
+        <div class="orbit orbit-one"></div>
+        <div class="orbit orbit-two"></div>
+        <div class="logo-glow"></div>
+        <span class="orbit-sphere sphere-cyan" aria-hidden="true"></span>
+        <span class="orbit-sphere sphere-violet" aria-hidden="true"></span>
+        <img class="demo-logo" src="src/logo.jpeg" alt="MYSTIX 2.0" />
+      </section>
+      <footer class="demo-footer">
+        <div class="scroll-window" aria-label="Demo scrolling message"><div class="scroll-track" id="scrollTrack">LOADING SCROLLTEXT...</div></div>
+      </footer>
+    </main>
+    <script src="src/app.js"></script>
+  </body>
+</html>
