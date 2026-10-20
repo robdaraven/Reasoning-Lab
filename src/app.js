@@ -289,7 +289,7 @@ function animate(now) {
   if (!paused) {
     frame += delta;
     drawStars(delta);
-    const travelProgress = (1 - Math.cos(frame * 0.01)) / 2;
+    const travelProgress = (1 + Math.sin(frame * 0.01)) / 2;
     const horizontalBounce = logoLeftX + (logoRightX - logoLeftX) * travelProgress;
     const verticalBounce = Math.cos(frame * 0.032) * 18;
     logo.style.translate = `${horizontalBounce}px ${verticalBounce}px`;
