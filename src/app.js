@@ -26,7 +26,7 @@ let nextSphereShow = 10000 + Math.random() * 10000;
 let sphereHideAt = 0;
 let lastRenderTime = 0;
 let sphereHideRequested = false;
-const SCROLL_PIXELS_PER_SECOND = 1108.54656;
+const SCROLL_PIXELS_PER_SECOND = 997.691904;
 let letterOffsets = [], trackWidth = 0, viewportWidth = 0, tickerBounds = null;
 
 function createOrbitSpheres() {
