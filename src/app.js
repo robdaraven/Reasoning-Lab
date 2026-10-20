@@ -24,13 +24,10 @@ let sphereTime = 0;
 let spheresVisible = false;
 let nextSphereShow = 10000 + Math.random() * 10000;
 let sphereHideAt = 0;
-let targetFps = 60;
-let frameInterval = 1000 / targetFps;
 let lastRenderTime = 0;
-let refreshProbeStart = 0;
-let refreshProbeFrames = 0;
 let sphereHideRequested = false;
-let ambientAudioContext = null;
+const SCROLL_PIXELS_PER_SECOND = 1368.576;
+let letterOffsets = [], trackWidth = 0, viewportWidth = 0, tickerBounds = null;
 
 function createOrbitSpheres() {
   const palette = ["cyan", "violet", "lime", "orange"];
@@ -117,7 +114,7 @@ function updateSpheres(delta) {
 }
 
 function resizeCanvas() {
-  const scale = window.devicePixelRatio || 1;
+  const scale = Math.min(window.devicePixelRatio || 1, 1.5);
   canvas.width = window.innerWidth * scale;
   canvas.height = window.innerHeight * scale;
   canvas.style.width = `${window.innerWidth}px`;
@@ -136,21 +133,21 @@ function createStars() {
   }
 }
 
-function drawStars() {
+function drawStars(delta) {
   bufferContext.clearRect(0, 0, window.innerWidth, window.innerHeight);
   drawRasterField();
-  nextStarTwist -= 1;
+  nextStarTwist -= delta;
   if (nextStarTwist <= 0) {
     starTwistDirection = Math.random() > 0.5 ? 1 : -1;
     nextStarTwist = 150 + Math.random() * 260;
   }
-  starTwist += starTwistDirection * 0.0018;
+  starTwist += starTwistDirection * 0.0018 * delta;
   const centerX = window.innerWidth / 2;
   const centerY = window.innerHeight / 2;
   const cosTwist = Math.cos(starTwist);
   const sinTwist = Math.sin(starTwist);
   for (const star of stars) {
-    star.depth -= star.speed * 0.006;
+    star.depth -= star.speed * 0.006 * delta;
     if (star.depth < 0.04) {
       star.depth = 1;
       star.x = Math.random() * 2 - 1;
@@ -183,8 +180,7 @@ function drawStars() {
 }
 
 function drawRasterField() {
-  const ticker = document.querySelector(".scroll-window");
-  const tickerBounds = ticker.getBoundingClientRect();
+  if (!tickerBounds) return;
   const width = window.innerWidth;
   const bands = 8;
   for (let band = 0; band < bands; band += 1) {
@@ -241,47 +237,43 @@ function setScrollText(text) {
   }
   scrollTrack.appendChild(fragment);
   scrollLetters = [...scrollTrack.children];
+  measureScroller();
 }
 
 function animate(now) {
-  if (!refreshProbeStart) refreshProbeStart = now;
-  refreshProbeFrames += 1;
-  if (now - refreshProbeStart >= 1000) {
-    const measuredFps = refreshProbeFrames * 1000 / (now - refreshProbeStart);
-    targetFps = [24, 30, 60, 90, 128].reduce((selected, option) => option <= measuredFps + 4 ? option : selected, 24);
-    frameInterval = 1000 / targetFps;
-    refreshProbeStart = now;
-    refreshProbeFrames = 0;
-  }
-  if (lastRenderTime && now - lastRenderTime < frameInterval) {
-    requestAnimationFrame(animate);
-    return;
-  }
-  const delta = lastRenderTime ? Math.min((now - lastRenderTime) / 16.67, 2) : 1;
+  const delta = lastRenderTime ? Math.min((now - lastRenderTime) / (1000 / 60), 6) : 0;
   lastRenderTime = now;
   lastTime = now;
   if (!paused) {
-    frame += 1;
-    drawStars();
+    frame += delta;
+    drawStars(delta);
     const horizontalBounce = Math.sin(frame * 0.024) * 12;
     const verticalBounce = Math.cos(frame * 0.032) * 4;
     logo.style.transform = `translate3d(${horizontalBounce}px, ${verticalBounce}px, 0) rotate(${Math.sin(frame * 0.01) * 0.12}deg)`;
     updateSpheres(delta);
     if (scrollWaitingUntil && performance.now() >= scrollWaitingUntil) {
-      scrollPosition = scrollTrack.parentElement.offsetWidth;
+      scrollPosition = viewportWidth;
       scrollWaitingUntil = 0;
     } else if (!scrollWaitingUntil) {
-      scrollPosition -= 25.344;
-      if (scrollPosition < -scrollTrack.offsetWidth) {
-        scrollPosition = -scrollTrack.offsetWidth;
+      scrollPosition -= SCROLL_PIXELS_PER_SECOND * delta / 60;
+      if (scrollPosition < -trackWidth) {
+        scrollPosition = -trackWidth;
         scrollWaitingUntil = performance.now() + 10000;
       }
     }
-    scrollTrack.style.transform = `translateX(${scrollPosition}px)`;
-    scrollLetters.forEach((letter, index) => {
+    scrollTrack.style.transform = `translate3d(${scrollPosition}px, 0, 0)`;
+    // Animate only the letters crossing the viewport.
+    let low = 0, high = letterOffsets.length;
+    while (low < high) {
+      const middle = (low + high) >>> 1;
+      if (letterOffsets[middle] + scrollPosition < -320) low = middle + 1;
+      else high = middle;
+    }
+    for (let index = low; index < scrollLetters.length; index += 1) {
+      if (letterOffsets[index] + scrollPosition > viewportWidth + 320) break;
       const wave = Math.sin(frame * 0.075 + index * 0.34) * 50;
-      letter.style.transform = `translateY(${wave}px)`;
-    });
+      scrollLetters[index].style.transform = `translate3d(0, ${wave}px, 0)`;
+    }
   }
   requestAnimationFrame(animate);
 }
@@ -297,149 +289,33 @@ async function loadScrollText() {
   }
 }
 
-function runPerformanceCheck() {
-  return new Promise((resolve) => {
-    const sampleStart = performance.now();
-    let samples = 0;
-    const sample = (now) => {
-      samples += 1;
-      if (now - sampleStart < 8400) {
-        requestAnimationFrame(sample);
-        return;
-      }
-      const measuredFps = samples * 1000 / (now - sampleStart);
-      targetFps = [24, 30, 60, 90, 128].reduce((selected, option) => option <= measuredFps + 4 ? option : selected, 24);
-      frameInterval = 1000 / targetFps;
-      refreshProbeStart = now;
-      refreshProbeFrames = 0;
-      decompressionScreen.classList.add("is-complete");
-      window.setTimeout(() => {
-        decompressionScreen.hidden = true;
-        resolve();
-      }, 600);
-    };
-    requestAnimationFrame(sample);
-  });
+function measureScroller() {
+  viewportWidth = scrollTrack.parentElement.offsetWidth;
+  trackWidth = scrollTrack.offsetWidth;
+  const start = scrollTrack.getBoundingClientRect().left;
+  letterOffsets = scrollLetters.map(letter => letter.getBoundingClientRect().left - start);
+  tickerBounds = scrollTrack.parentElement.getBoundingClientRect();
 }
 
-function startAmbientAudio() {
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContext) return;
-  try {
-    const audioContext = new AudioContext();
-    ambientAudioContext = audioContext;
-    const master = audioContext.createGain();
-    const compressor = audioContext.createDynamicsCompressor();
-    master.gain.value = 0.12;
-    compressor.threshold.value = -18;
-    compressor.knee.value = 12;
-    compressor.ratio.value = 5;
-    compressor.connect(audioContext.destination);
-    master.connect(compressor);
-    const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate, audioContext.sampleRate);
-    const noiseData = noiseBuffer.getChannelData(0);
-    for (let index = 0; index < noiseData.length; index += 1) noiseData[index] = Math.random() * 2 - 1;
-    const playNoise = (time, duration, frequency, volume, type = "bandpass") => {
-      const source = audioContext.createBufferSource();
-      const filter = audioContext.createBiquadFilter();
-      const gain = audioContext.createGain();
-      source.buffer = noiseBuffer;
-      filter.type = type;
-      filter.frequency.value = frequency;
-      filter.Q.value = type === "highpass" ? 0.7 : 1.2;
-      gain.gain.setValueAtTime(volume, time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
-      source.connect(filter).connect(gain).connect(master);
-      source.start(time);
-      source.stop(time + duration + 0.02);
-    };
-    const playTone = (time, frequency, duration, volume, type = "square") => {
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      oscillator.type = type;
-      oscillator.frequency.setValueAtTime(frequency, time);
-      gain.gain.setValueAtTime(volume, time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
-      oscillator.connect(gain).connect(master);
-      oscillator.start(time);
-      oscillator.stop(time + duration + 0.03);
-    };
-    const playLead = (time, frequency, duration) => {
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      const vibrato = audioContext.createOscillator();
-      const vibratoGain = audioContext.createGain();
-      oscillator.type = "square";
-      oscillator.frequency.setValueAtTime(frequency * 0.92, time);
-      oscillator.frequency.linearRampToValueAtTime(frequency * 1.08, time + duration * 0.42);
-      oscillator.frequency.linearRampToValueAtTime(frequency * 0.86, time + duration);
-      vibrato.type = "sine";
-      vibrato.frequency.value = 7.2;
-      vibratoGain.gain.setValueAtTime(frequency * 0.045, time);
-      vibrato.connect(vibratoGain).connect(oscillator.frequency);
-      gain.gain.setValueAtTime(0.001, time);
-      gain.gain.linearRampToValueAtTime(0.075, time + duration * 0.08);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
-      oscillator.connect(gain).connect(master);
-      vibrato.start(time);
-      oscillator.start(time);
-      vibrato.stop(time + duration + 0.03);
-      oscillator.stop(time + duration + 0.03);
-    };
-    const bassPattern = [55, 55, 73.42, 82.41, 55, 65.41, 73.42, 98, 55, 55, 73.42, 82.41, 110, 98, 73.42, 65.41, 65.41, 65.41, 82.41, 98, 65.41, 73.42, 82.41, 110, 73.42, 73.42, 98, 110, 73.42, 82.41, 98, 123.47];
-    const leadPattern = [220, 0, 261.63, 293.66, 0, 329.63, 293.66, 0, 220, 246.94, 0, 293.66, 329.63, 0, 261.63, 0, 196, 0, 246.94, 293.66, 0, 369.99, 329.63, 0, 261.63, 293.66, 0, 392, 329.63, 0, 293.66, 0];
-    const padChords = [[110, 130.81, 164.81], [98, 123.47, 146.83], [82.41, 103.83, 123.47], [123.47, 146.83, 185]];
-    const stepLength = 60 / 112 / 4;
-    let nextStepTime = audioContext.currentTime + 0.08;
-    let step = 0;
-    const schedule = () => {
-      while (nextStepTime < audioContext.currentTime + 0.12) {
-        if (step % 16 === 0 || step % 16 === 7 || step % 16 === 10) {
-          const kick = audioContext.createOscillator();
-          const kickGain = audioContext.createGain();
-          kick.type = "sine";
-          kick.frequency.setValueAtTime(145, nextStepTime);
-          kick.frequency.exponentialRampToValueAtTime(48, nextStepTime + 0.16);
-          kickGain.gain.setValueAtTime(0.7, nextStepTime);
-          kickGain.gain.exponentialRampToValueAtTime(0.001, nextStepTime + 0.22);
-          kick.connect(kickGain).connect(master);
-          kick.start(nextStepTime);
-          kick.stop(nextStepTime + 0.24);
-        }
-        if (step % 16 === 4 || step % 16 === 12) playNoise(nextStepTime, 0.16, 1700, 0.32);
-        if (step % 2 === 1 || step % 16 === 10) playNoise(nextStepTime, step % 4 === 3 ? 0.055 : 0.035, 6500, 0.12, "highpass");
-        if (step % 16 === 0) {
-          padChords[Math.floor(step / 16) % padChords.length].forEach((frequency, chordIndex) => {
-            playTone(nextStepTime, frequency, stepLength * 15, 0.022 - chordIndex * 0.003, "triangle");
-          });
-        }
-        playTone(nextStepTime, bassPattern[step % 32], step % 4 === 3 ? stepLength * 1.7 : stepLength * 0.72, 0.16, "sawtooth");
-        if (leadPattern[step % 32]) playLead(nextStepTime + stepLength * 0.08, leadPattern[step % 32], step % 8 === 2 ? stepLength * 1.35 : stepLength * 0.55);
-        step += 1;
-        nextStepTime += stepLength;
-      }
-    };
-    window.setInterval(schedule, 25);
-    schedule();
-    if (audioContext.state === "suspended") audioContext.resume().catch(() => {});
-  } catch {
-    // Autoplay or audio output may be unavailable; the visual demo still runs.
-  }
+function finishIntro() {
+  window.setTimeout(() => {
+    decompressionScreen.classList.add("is-complete");
+    window.setTimeout(() => {
+      decompressionScreen.hidden = true;
+      lastRenderTime = 0;
+      requestAnimationFrame(animate);
+    }, 600);
+  }, 8400);
 }
 
-function resumeAmbientAudio() {
-  if (ambientAudioContext?.state === "suspended") ambientAudioContext.resume().catch(() => {});
-}
-
-window.addEventListener("resize", () => { resizeCanvas(); createStars(); });
+window.addEventListener("resize", () => { resizeCanvas(); createStars(); measureScroller(); });
+document.fonts.ready.then(measureScroller);
+document.addEventListener("visibilitychange", () => { lastRenderTime = 0; });
 document.addEventListener("keydown", (event) => {
   if (event.code !== "Space") return;
   event.preventDefault();
   paused = !paused;
-  resumeAmbientAudio();
 });
-window.addEventListener("pointerdown", resumeAmbientAudio, { passive: true });
-window.addEventListener("touchstart", resumeAmbientAudio, { passive: true });
 
 resizeCanvas();
 createStars();
@@ -447,5 +323,4 @@ createOrbitSpheres();
 initializeSphereMotion();
 removeLogoBackground();
 loadScrollText();
-startAmbientAudio();
-runPerformanceCheck().then(() => requestAnimationFrame(animate));
+finishIntro();
