@@ -264,7 +264,7 @@ function updateLogoFlip(delta) {
   if (flipStart === null) return;
   const progress = Math.min(1, (flipClock - flipStart) / 1.6);
   const eased = progress * progress * (3 - 2 * progress);
-  logo.style.transform = `perspective(1200px) rotateX(${eased * 360}deg)`;
+  logo.style.transform = `rotateX(${eased * 360}deg)`;
   if (progress === 1) {
     flipStart = null;
     logo.style.transform = "none";
@@ -322,8 +322,13 @@ async function loadScrollText() {
 }
 
 function measureLogoTravel() {
-  // Keep a broad sideways sweep with a little space at either edge.
-  logoTravel = window.innerWidth * 0.425;
+  const viewportWidth = document.documentElement.clientWidth;
+  const scaleX = parseFloat(getComputedStyle(logo).scale) || 1;
+  const margin = 12;
+  // Fit the scaled box even on small screens, then limit motion to free space.
+  logo.style.maxWidth = `${Math.max(1, (viewportWidth - margin * 2) / scaleX)}px`;
+  const renderedWidth = logo.getBoundingClientRect().width;
+  logoTravel = Math.max(0, (viewportWidth - renderedWidth) / 2 - margin);
 }
 
 function measureScroller() {
