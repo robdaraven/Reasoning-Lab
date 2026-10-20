@@ -32,11 +32,17 @@ let letterOffsets = [], trackWidth = 0, viewportWidth = 0, tickerBounds = null;
 
 function createOrbitSpheres() {
   const palette = ["cyan", "violet", "lime", "orange"];
+  // Keep solid sphere bodies above every visual effect, outside the logo's layer.
+  const sphereLayer = document.createElement("div");
+  sphereLayer.className = "sphere-layer";
+  sphereLayer.setAttribute("aria-hidden", "true");
+  document.querySelector(".demo-frame").appendChild(sphereLayer);
+  orbitSpheres.forEach(sphere => sphereLayer.appendChild(sphere));
   for (let index = orbitSpheres.length; index < 5; index += 1) {
     const sphere = document.createElement("span");
     sphere.className = `orbit-sphere sphere-${palette[index % palette.length]}`;
     sphere.setAttribute("aria-hidden", "true");
-    logoStage.appendChild(sphere);
+    sphereLayer.appendChild(sphere);
     orbitSpheres.push(sphere);
   }
 }
