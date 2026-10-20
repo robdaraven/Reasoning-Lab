@@ -26,7 +26,8 @@ let nextSphereShow = 10000 + Math.random() * 10000;
 let sphereHideAt = 0;
 let lastRenderTime = 0;
 let sphereHideRequested = false;
-const SCROLL_PIXELS_PER_SECOND = 997.691904;
+const SCROLL_PIXELS_PER_SECOND = 897.9227136;
+let logoTravel = 0;
 let letterOffsets = [], trackWidth = 0, viewportWidth = 0, tickerBounds = null;
 
 function createOrbitSpheres() {
@@ -101,7 +102,7 @@ function updateSpheres(delta) {
     state.sphere.style.width = `${state.radius * 2}px`;
     state.sphere.style.height = `${state.radius * 2}px`;
     state.sphere.style.backgroundSize = `${state.radius}px ${state.radius}px`;
-    state.sphere.style.zIndex = "0";
+    state.sphere.style.zIndex = "3";
     state.sphere.style.opacity = "1";
     state.sphere.style.backgroundPosition = `${state.x * 0.25}px ${state.y * 0.25}px`;
     state.sphere.style.transform = `translate3d(calc(-50% + ${state.x}px), calc(-50% + ${state.y}px), 0)`;
@@ -247,9 +248,10 @@ function animate(now) {
   if (!paused) {
     frame += delta;
     drawStars(delta);
-    const horizontalBounce = Math.sin(frame * 0.024) * 12;
+    const horizontalBounce = Math.sin(frame * 0.01) * logoTravel;
     const verticalBounce = Math.cos(frame * 0.032) * 4;
-    logo.style.transform = `translate3d(${horizontalBounce}px, ${verticalBounce}px, 0) rotate(${Math.sin(frame * 0.01) * 0.12}deg)`;
+    logo.style.translate = `${horizontalBounce}px ${verticalBounce}px`;
+    logo.style.transform = "none";
     updateSpheres(delta);
     if (scrollWaitingUntil && performance.now() >= scrollWaitingUntil) {
       scrollPosition = viewportWidth;
@@ -289,6 +291,14 @@ async function loadScrollText() {
   }
 }
 
+function measureLogoTravel() {
+  // Account for object-fit letterboxing and the independent horizontal scale.
+  const ratio = logo.naturalWidth && logo.naturalHeight ? logo.naturalWidth / logo.naturalHeight : 1;
+  const contentWidth = Math.min(logo.clientWidth, logo.clientHeight * ratio);
+  const scaleX = parseFloat(getComputedStyle(logo).scale) || 1;
+  logoTravel = Math.abs(window.innerWidth - contentWidth * scaleX) / 2;
+}
+
 function measureScroller() {
   viewportWidth = scrollTrack.parentElement.offsetWidth;
   trackWidth = scrollTrack.offsetWidth;
@@ -308,8 +318,9 @@ function finishIntro() {
   }, 400); // 400ms decrunching + 100ms fade = 500ms total.
 }
 
-window.addEventListener("resize", () => { resizeCanvas(); createStars(); measureScroller(); });
-document.fonts.ready.then(measureScroller);
+window.addEventListener("resize", () => { resizeCanvas(); createStars(); measureScroller(); measureLogoTravel(); });
+document.fonts.ready.then(() => { measureScroller(); measureLogoTravel(); });
+logo.addEventListener("load", measureLogoTravel);
 document.addEventListener("visibilitychange", () => { lastRenderTime = 0; });
 document.addEventListener("keydown", (event) => {
   if (event.code !== "Space") return;
