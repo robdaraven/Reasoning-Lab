@@ -51,3 +51,7 @@ body { color: var(--electric); font-family: var(--mono); }
 
 /* Solid spheres remain opaque in front of the moving logo. */
 .orbit-sphere { opacity: 1; background-color: #06132c; mix-blend-mode: normal; isolation: isolate; z-index: 3; }
+
+/* Prevent the scroller, CRT overlay and screen-blended logo from crossing sphere bodies. */
+.sphere-layer { position: fixed; inset: 0; z-index: 6; pointer-events: none; isolation: isolate; }
+.sphere-layer .orbit-sphere { opacity: 1; mix-blend-mode: normal; background-color: #06132c; filter: none; }
