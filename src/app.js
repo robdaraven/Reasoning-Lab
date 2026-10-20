@@ -27,7 +27,8 @@ let sphereHideAt = 0;
 let lastRenderTime = 0;
 let sphereHideRequested = false;
 const SCROLL_PIXELS_PER_SECOND = 897.9227136;
-let logoTravel = 0;
+let logoTravel = 0, logoLeftX = 0, logoRightX = 0;
+let logoInkLeft = 0, logoInkRight = 1;
 let flipClock = 0, flipStart = null, nextFlip = 10 + Math.random() * 10;
 const flipReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let letterOffsets = [], trackWidth = 0, viewportWidth = 0, tickerBounds = null;
@@ -223,9 +224,19 @@ function removeLogoBackground() {
     imageContext.drawImage(source, 0, 0);
     const pixels = imageContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
     const { data } = pixels;
+    let inkLeft = imageCanvas.width, inkRight = 0;
     for (let index = 0; index < data.length; index += 4) {
       const brightness = Math.max(data[index], data[index + 1], data[index + 2]);
       if (brightness < 18) data[index + 3] = 0;
+      else {
+        const x = (index / 4) % imageCanvas.width;
+        inkLeft = Math.min(inkLeft, x);
+        inkRight = Math.max(inkRight, x + 1);
+      }
+    }
+    if (inkRight > inkLeft) {
+      logoInkLeft = inkLeft / imageCanvas.width;
+      logoInkRight = inkRight / imageCanvas.width;
     }
     imageContext.putImageData(pixels, 0, 0);
     const transparentLogo = imageCanvas.toDataURL("image/png");
@@ -278,7 +289,8 @@ function animate(now) {
   if (!paused) {
     frame += delta;
     drawStars(delta);
-    const horizontalBounce = Math.sin(frame * 0.01) * logoTravel;
+    const travelProgress = (1 - Math.cos(frame * 0.01)) / 2;
+    const horizontalBounce = logoLeftX + (logoRightX - logoLeftX) * travelProgress;
     const verticalBounce = Math.cos(frame * 0.032) * 18;
     logo.style.translate = `${horizontalBounce}px ${verticalBounce}px`;
     updateLogoFlip(delta);
@@ -323,12 +335,18 @@ async function loadScrollText() {
 
 function measureLogoTravel() {
   const viewportWidth = document.documentElement.clientWidth;
-  const scaleX = parseFloat(getComputedStyle(logo).scale) || 1;
-  const margin = 12;
-  // Fit the scaled box even on small screens, then limit motion to free space.
-  logo.style.maxWidth = `${Math.max(1, (viewportWidth - margin * 2) / scaleX)}px`;
-  const renderedWidth = logo.getBoundingClientRect().width;
-  logoTravel = Math.max(0, (viewportWidth - renderedWidth) / 2 - margin);
+  const style = getComputedStyle(logo);
+  const scaleX = parseFloat(style.scale) || 1;
+  logo.style.maxWidth = `${Math.max(1, viewportWidth / scaleX)}px`;
+  const rect = logo.getBoundingClientRect();
+  const currentX = parseFloat(style.translate) || 0;
+  const aspect = logo.naturalWidth && logo.naturalHeight ? logo.naturalWidth / logo.naturalHeight : 1;
+  const contentWidth = Math.min(logo.clientWidth, logo.clientHeight * aspect) * scaleX;
+  const contentLeft = rect.left - currentX + (rect.width - contentWidth) / 2;
+  // Reverse when the visible lettering reaches the edge, ignoring empty padding.
+  logoLeftX = -(contentLeft + contentWidth * logoInkLeft);
+  logoRightX = viewportWidth - (contentLeft + contentWidth * logoInkRight);
+  logoTravel = (logoRightX - logoLeftX) / 2;
 }
 
 function measureScroller() {
