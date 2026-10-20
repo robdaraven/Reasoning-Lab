@@ -304,8 +304,8 @@ function finishIntro() {
       decompressionScreen.hidden = true;
       lastRenderTime = 0;
       requestAnimationFrame(animate);
-    }, 600);
-  }, 1400); // 1.4 seconds of decrunching + 0.6-second fade = 2 seconds total.
+    }, 100);
+  }, 400); // 400ms decrunching + 100ms fade = 500ms total.
 }
 
 window.addEventListener("resize", () => { resizeCanvas(); createStars(); measureScroller(); });
