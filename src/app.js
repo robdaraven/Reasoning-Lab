@@ -28,6 +28,8 @@ let lastRenderTime = 0;
 let sphereHideRequested = false;
 const SCROLL_PIXELS_PER_SECOND = 897.9227136;
 let logoTravel = 0;
+let flipClock = 0, flipStart = null, nextFlip = 10 + Math.random() * 10;
+const flipReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let letterOffsets = [], trackWidth = 0, viewportWidth = 0, tickerBounds = null;
 
 function createOrbitSpheres() {
@@ -247,6 +249,28 @@ function setScrollText(text) {
   measureScroller();
 }
 
+function updateLogoFlip(delta) {
+  flipClock += delta / 60;
+  if (flipReducedMotion.matches) {
+    flipStart = null;
+    nextFlip = flipClock + 10 + Math.random() * 10;
+    logo.style.transform = "none";
+    return;
+  }
+  if (flipStart === null && flipClock >= nextFlip) {
+    flipStart = flipClock;
+    nextFlip = flipClock + 10 + Math.random() * 10;
+  }
+  if (flipStart === null) return;
+  const progress = Math.min(1, (flipClock - flipStart) / 1.6);
+  const eased = progress * progress * (3 - 2 * progress);
+  logo.style.transform = `perspective(1200px) rotateX(${eased * 360}deg)`;
+  if (progress === 1) {
+    flipStart = null;
+    logo.style.transform = "none";
+  }
+}
+
 function animate(now) {
   const delta = lastRenderTime ? Math.min((now - lastRenderTime) / (1000 / 60), 6) : 0;
   lastRenderTime = now;
@@ -257,7 +281,7 @@ function animate(now) {
     const horizontalBounce = Math.sin(frame * 0.01) * logoTravel;
     const verticalBounce = Math.cos(frame * 0.032) * 4;
     logo.style.translate = `${horizontalBounce}px ${verticalBounce}px`;
-    logo.style.transform = "none";
+    updateLogoFlip(delta);
     updateSpheres(delta);
     if (scrollWaitingUntil && performance.now() >= scrollWaitingUntil) {
       scrollPosition = viewportWidth;
