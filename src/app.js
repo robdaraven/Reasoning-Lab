@@ -271,7 +271,7 @@ function animate(now) {
       scrollPosition = scrollTrack.parentElement.offsetWidth;
       scrollWaitingUntil = 0;
     } else if (!scrollWaitingUntil) {
-      scrollPosition -= 31.68;
+      scrollPosition -= 25.344;
       if (scrollPosition < -scrollTrack.offsetWidth) {
         scrollPosition = -scrollTrack.offsetWidth;
         scrollWaitingUntil = performance.now() + 10000;
