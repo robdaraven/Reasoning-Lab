@@ -29,7 +29,7 @@ let sphereHideRequested = false;
 const SCROLL_PIXELS_PER_SECOND = 897.9227136;
 let logoTravel = 0, logoLeftX = 0, logoRightX = 0;
 let logoInkLeft = 0, logoInkRight = 1;
-let flipClock = 0, flipStart = null, nextFlip = 10 + Math.random() * 10;
+let flipClock = 0, flipStart = null, nextFlip = 30 + Math.random() * 30;
 const flipReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let letterOffsets = [], trackWidth = 0, viewportWidth = 0, tickerBounds = null;
 
@@ -264,13 +264,13 @@ function updateLogoFlip(delta) {
   flipClock += delta / 60;
   if (flipReducedMotion.matches) {
     flipStart = null;
-    nextFlip = flipClock + 10 + Math.random() * 10;
+    nextFlip = flipClock + 30 + Math.random() * 30;
     logo.style.transform = "none";
     return;
   }
   if (flipStart === null && flipClock >= nextFlip) {
     flipStart = flipClock;
-    nextFlip = flipClock + 10 + Math.random() * 10;
+    nextFlip = flipClock + 30 + Math.random() * 30;
   }
   if (flipStart === null) return;
   const progress = Math.min(1, (flipClock - flipStart) / 1.6);
@@ -385,3 +385,44 @@ initializeSphereMotion();
 removeLogoBackground();
 loadScrollText();
 finishIntro();
+
+const introMusic = document.getElementById("intro-music");
+const introMusicButton = document.getElementById("intro-music-toggle");
+if (introMusic && introMusicButton) {
+  let musicEnabled = true;
+  introMusic.volume = 0.65;
+  function syncMusic() {
+    const playing = !introMusic.paused;
+    introMusicButton.textContent = playing ? "♫ MUSIC ON" : musicEnabled ? "♫ PLAY MUSIC" : "♫ MUSIC OFF";
+    introMusicButton.setAttribute("aria-pressed", String(playing));
+    introMusicButton.setAttribute("aria-label", playing ? "Pause Elysium by Jester" : "Play Elysium by Jester");
+  }
+  function startMusic() {
+    if (!musicEnabled || !introMusic.paused) return;
+    introMusic.play().then(syncMusic).catch(syncMusic);
+  }
+  function unlockMusic(event) {
+    if (introMusicButton.contains(event.target)) return;
+    if (event.type === "keydown" && (event.repeat || event.ctrlKey || event.metaKey || event.altKey)) return;
+    startMusic();
+  }
+  introMusicButton.addEventListener("click", () => {
+    if (!introMusic.paused) {
+      musicEnabled = false;
+      introMusic.pause();
+    } else {
+      musicEnabled = true;
+      startMusic();
+    }
+    syncMusic();
+  });
+  introMusic.addEventListener("playing", syncMusic);
+  introMusic.addEventListener("pause", syncMusic);
+  introMusic.addEventListener("error", () => {
+    introMusicButton.textContent = "♫ RETRY MUSIC";
+  });
+  document.addEventListener("pointerdown", unlockMusic, {passive: true});
+  document.addEventListener("keydown", unlockMusic);
+  syncMusic();
+  startMusic();
+}
