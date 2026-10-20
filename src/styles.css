@@ -16,7 +16,7 @@ body { color: var(--electric); font-family: var(--mono); }
 .demo-header { display: flex; align-items: center; justify-content: space-between; width: min(1320px, calc(100% - 72px)); margin: 0 auto; padding: 28px 0; border-bottom: 1px solid rgba(79, 169, 255, .25); color: var(--blue); font-family: var(--pixel); font-size: 9px; text-shadow: 0 0 8px rgba(79, 169, 255, .8); }
 .header-center { color: #84c8ff; opacity: .75; }
 .logo-stage { position: relative; z-index: 1; display: grid; place-items: center; height: min(58vh, 620px); min-height: 0; margin: auto; width: min(1040px, 82vw); }
-.demo-logo { scale: 1.6; position: relative; z-index: 2; display: block; width: min(900px, 88vw); max-height: 54vh; object-fit: contain; mix-blend-mode: screen; filter: drop-shadow(0 0 12px rgba(64, 157, 255, .65)) drop-shadow(0 0 34px rgba(45, 71, 255, .4)); transition: transform .1s linear; will-change: transform; }
+.demo-logo { scale: 1.28; position: relative; z-index: 2; display: block; width: min(900px, 88vw); max-height: 54vh; object-fit: contain; mix-blend-mode: screen; filter: drop-shadow(0 0 12px rgba(64, 157, 255, .65)) drop-shadow(0 0 34px rgba(45, 71, 255, .4)); transition: transform .1s linear; will-change: transform; }
 .logo-glow { position: absolute; z-index: 1; width: 72%; height: 42%; border-radius: 50%; background: rgba(35, 98, 231, .22); filter: blur(65px); }
 .orbit { position: absolute; z-index: 1; border: 1px solid rgba(79, 169, 255, .3); border-radius: 50%; transform: rotate(-22deg); box-shadow: 0 0 10px rgba(79, 169, 255, .22); }
 .orbit-one { width: 92%; height: 33%; }
@@ -44,3 +44,7 @@ body { color: var(--electric); font-family: var(--mono); }
 .footer-rule { display: flex; justify-content: center; gap: 20px; padding: 14px 0 12px; color: var(--blue); font-size: 11px; text-shadow: 0 0 8px var(--blue); }
 .footer-note { margin: 0; color: rgba(184, 229, 255, .5); font-size: 9px; letter-spacing: .18em; }
 @media (max-width: 700px) { .demo-header { width: calc(100% - 28px); padding: 18px 0; font-size: 7px; } .header-center { display: none; } .logo-stage { width: 100vw; min-height: 56vh; } .demo-logo { width: 102vw; max-height: 48vh; } .side-panel { top: 31%; width: auto; font-size: 8px; } .side-panel-left { left: 14px; } .side-panel-right { right: 14px; } .stage-caption { bottom: 1%; white-space: nowrap; font-size: 6px; } .demo-footer { padding-bottom: 18px; } .footer-note { font-size: 7px; } }
+
+/* Promote the moving ticker without promoting every offscreen letter. */
+.scroll-track { will-change: transform; }
+.scroll-window { contain: layout paint; }
