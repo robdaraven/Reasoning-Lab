@@ -55,3 +55,7 @@ body { color: var(--electric); font-family: var(--mono); }
 /* Prevent the scroller, CRT overlay and screen-blended logo from crossing sphere bodies. */
 .sphere-layer { position: fixed; inset: 0; z-index: 6; pointer-events: none; isolation: isolate; }
 .sphere-layer .orbit-sphere { opacity: 1; mix-blend-mode: normal; background-color: #06132c; filter: none; }
+
+/* Centre the logo box reliably while its bounded translation animates. */
+.logo-stage { display: flex; justify-content: center; align-items: center; }
+.demo-logo { flex: none; }
