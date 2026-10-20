@@ -10,9 +10,12 @@
       #intro-music-toggle { position:fixed;top:16px;right:16px;z-index:7;border:1px solid #4fa9ff88;border-radius:6px;padding:10px 13px;background:#020711e8;color:#b8e5ff;font:11px "Space Mono",monospace;cursor:pointer; }
       #intro-music-toggle:focus-visible { outline:2px solid #b8e5ff;outline-offset:3px; }
     </style>
-    <link rel="preload" as="audio" href="https://ladalab.com/src/audio/elysium-intro.mp3" type="audio/mpeg" />
+    <link rel="preload" as="audio" href="https://ladalab.com/src/audio/elysium-intro-fast.mp3" type="audio/mpeg" />
   </head>
   <body>
+    <audio autoplay id="intro-music" src="https://ladalab.com/src/audio/elysium-intro-fast.mp3" preload="auto" loop aria-label="Elysium by Jester of Sanity"></audio>
+    <button id="intro-music-toggle" type="button" aria-pressed="false" title="Elysium — Jester / Sanity, 1991">♫ PLAY MUSIC</button>
+    <script src="src/intro-music.js?v=early-start-20261021"></script>
     <main class="demo-frame" id="demoFrame">
       <canvas id="starfield" aria-hidden="true"></canvas>
       <div class="crt-lines" aria-hidden="true"></div>
@@ -29,9 +32,6 @@
         <div class="scroll-window" aria-label="Demo scrolling message"><div class="scroll-track" id="scrollTrack">LOADING SCROLLTEXT...</div></div>
       </footer>
     </main>
-    <audio autoplay id="intro-music" src="https://ladalab.com/src/audio/elysium-intro.mp3" preload="auto" loop aria-label="Elysium by Jester of Sanity"></audio>
-    <button id="intro-music-toggle" type="button" aria-pressed="false" title="Elysium — Jester / Sanity, 1991">♫ PLAY MUSIC</button>
-    <script src="src/intro-music.js?v=early-start-20261021"></script>
     <script src="src/app.js?v=centre-start-20261021"></script>
   </body>
 </html>
