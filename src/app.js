@@ -1,7 +1,7 @@
 const canvas = document.querySelector("#starfield");
 const context = canvas.getContext("2d");
-const bufferCanvas = document.createElement("canvas");
-const bufferContext = bufferCanvas.getContext("2d");
+// Draw directly: canvas frames are presented together by the browser.
+const bufferContext = context;
 const scrollTrack = document.querySelector("#scrollTrack");
 const logo = document.querySelector(".demo-logo");
 const logoStage = document.querySelector(".logo-stage");
@@ -25,6 +25,7 @@ let spheresVisible = false;
 let nextSphereShow = 10000 + Math.random() * 10000;
 let sphereHideAt = 0;
 let lastRenderTime = 0;
+let animationId = 0, introReady = false;
 let sphereHideRequested = false;
 const SCROLL_PIXELS_PER_SECOND = 897.9227136;
 let logoTravel = 0, logoLeftX = 0, logoRightX = 0;
@@ -60,6 +61,8 @@ function initializeSphereMotion() {
     sphere.style.width = `${radius * 2}px`;
     sphere.style.height = `${radius * 2}px`;
     sphere.style.backgroundSize = `${radius}px ${radius}px`;
+    sphere.style.zIndex = "3";
+    sphere.style.opacity = "1";
     const baseY = Math.random() * (height * (2 / 3) - radius * 2) - height / 2 + radius;
     sphereStates.push({
       x: Math.random() * width - width / 2,
@@ -92,14 +95,14 @@ function updateSpheres(delta) {
     sphereStates.forEach((state) => {
       state.x = halfWidth + state.radius + Math.random() * window.innerWidth * 0.35;
       state.exited = false;
-      state.sphere.style.display = "block";
+      if (state.sphere.style.display !== "block") state.sphere.style.display = "block";
     });
   } else if (spheresVisible && sphereTime >= sphereHideAt) {
     sphereHideRequested = true;
   }
   sphereStates.forEach((state) => {
     if (!spheresVisible) {
-      state.sphere.style.display = "none";
+      if (state.sphere.style.display !== "none") state.sphere.style.display = "none";
       return;
     }
     state.sphere.style.display = "block";
@@ -108,11 +111,6 @@ function updateSpheres(delta) {
     const lowerLimit = -window.innerHeight / 2 + state.radius;
     state.y = Math.max(lowerLimit, Math.min(upperLimit, state.baseY + Math.sin(frame * 0.028 + state.wavePhase) * state.waveAmplitude));
     if (state.x < -halfWidth - state.radius) state.exited = true;
-    state.sphere.style.width = `${state.radius * 2}px`;
-    state.sphere.style.height = `${state.radius * 2}px`;
-    state.sphere.style.backgroundSize = `${state.radius}px ${state.radius}px`;
-    state.sphere.style.zIndex = "3";
-    state.sphere.style.opacity = "1";
     state.sphere.style.backgroundPosition = `${state.x * 0.25}px ${state.y * 0.25}px`;
     state.sphere.style.transform = `translate3d(calc(-50% + ${state.x}px), calc(-50% + ${state.y}px), 0)`;
   });
@@ -129,9 +127,6 @@ function resizeCanvas() {
   canvas.height = window.innerHeight * scale;
   canvas.style.width = `${window.innerWidth}px`;
   canvas.style.height = `${window.innerHeight}px`;
-  bufferCanvas.width = window.innerWidth * scale;
-  bufferCanvas.height = window.innerHeight * scale;
-  bufferContext.setTransform(scale, 0, 0, scale, 0, 0);
   context.setTransform(scale, 0, 0, scale, 0, 0);
 }
 
@@ -185,8 +180,6 @@ function drawStars(delta) {
     bufferContext.fillStyle = `hsla(${hue}, 100%, 66%, ${alpha})`;
     bufferContext.fillRect(x, y, size, size);
   }
-  context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-  context.drawImage(bufferCanvas, 0, 0, window.innerWidth, window.innerHeight);
 }
 
 function drawRasterField() {
@@ -283,6 +276,8 @@ function updateLogoFlip(delta) {
 }
 
 function animate(now) {
+  animationId = 0;
+  if (document.hidden || paused || !introReady) return;
   const delta = lastRenderTime ? Math.min((now - lastRenderTime) / (1000 / 60), 6) : 0;
   lastRenderTime = now;
   lastTime = now;
@@ -319,7 +314,14 @@ function animate(now) {
       scrollLetters[index].style.transform = `translate3d(0, ${wave}px, 0)`;
     }
   }
-  requestAnimationFrame(animate);
+  animationId = requestAnimationFrame(animate);
+}
+
+function syncAnimation() {
+  cancelAnimationFrame(animationId);
+  animationId = 0;
+  lastRenderTime = 0;
+  if (introReady && !paused && !document.hidden) animationId = requestAnimationFrame(animate);
 }
 
 async function loadScrollText() {
@@ -362,8 +364,8 @@ function finishIntro() {
     decompressionScreen.classList.add("is-complete");
     window.setTimeout(() => {
       decompressionScreen.hidden = true;
-      lastRenderTime = 0;
-      requestAnimationFrame(animate);
+      introReady = true;
+      syncAnimation();
     }, 100);
   }, 400); // 400ms decrunching + 100ms fade = 500ms total.
 }
@@ -371,11 +373,12 @@ function finishIntro() {
 window.addEventListener("resize", () => { resizeCanvas(); createStars(); measureScroller(); measureLogoTravel(); });
 document.fonts.ready.then(() => { measureScroller(); measureLogoTravel(); });
 logo.addEventListener("load", measureLogoTravel);
-document.addEventListener("visibilitychange", () => { lastRenderTime = 0; });
+document.addEventListener("visibilitychange", syncAnimation);
 document.addEventListener("keydown", (event) => {
   if (event.code !== "Space") return;
   event.preventDefault();
   paused = !paused;
+  syncAnimation();
 });
 
 resizeCanvas();
