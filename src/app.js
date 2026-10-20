@@ -298,11 +298,9 @@ async function loadScrollText() {
 }
 
 function measureLogoTravel() {
-  // Account for object-fit letterboxing and the independent horizontal scale.
-  const ratio = logo.naturalWidth && logo.naturalHeight ? logo.naturalWidth / logo.naturalHeight : 1;
-  const contentWidth = Math.min(logo.clientWidth, logo.clientHeight * ratio);
-  const scaleX = parseFloat(getComputedStyle(logo).scale) || 1;
-  logoTravel = Math.abs(window.innerWidth - contentWidth * scaleX) / 2;
+  // Sweep the logo's centre across the full viewport rather than restricting
+  // travel to the small gap between a large logo and the screen edges.
+  logoTravel = window.innerWidth / 2;
 }
 
 function measureScroller() {
