@@ -422,6 +422,9 @@ if (introMusic && introMusicButton) {
     introMusicButton.textContent = "♫ RETRY MUSIC";
   });
   document.addEventListener("pointerdown", unlockMusic, {passive: true});
+  document.addEventListener("click", unlockMusic);
+  document.addEventListener("touchend", unlockMusic, {passive: true});
+  window.addEventListener("pageshow", () => { if (musicEnabled) startMusic(); });
   document.addEventListener("keydown", unlockMusic);
   syncMusic();
   startMusic();
