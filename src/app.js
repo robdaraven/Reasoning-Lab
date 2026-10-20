@@ -279,7 +279,7 @@ function animate(now) {
     frame += delta;
     drawStars(delta);
     const horizontalBounce = Math.sin(frame * 0.01) * logoTravel;
-    const verticalBounce = Math.cos(frame * 0.032) * 4;
+    const verticalBounce = Math.cos(frame * 0.032) * 18;
     logo.style.translate = `${horizontalBounce}px ${verticalBounce}px`;
     updateLogoFlip(delta);
     updateSpheres(delta);
@@ -322,9 +322,8 @@ async function loadScrollText() {
 }
 
 function measureLogoTravel() {
-  // Sweep the logo's centre across the full viewport rather than restricting
-  // travel to the small gap between a large logo and the screen edges.
-  logoTravel = window.innerWidth / 2;
+  // Keep a broad sideways sweep with a little space at either edge.
+  logoTravel = window.innerWidth * 0.425;
 }
 
 function measureScroller() {
