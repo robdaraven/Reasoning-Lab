@@ -305,7 +305,7 @@ function finishIntro() {
       lastRenderTime = 0;
       requestAnimationFrame(animate);
     }, 600);
-  }, 8400);
+  }, 1400); // 1.4 seconds of decrunching + 0.6-second fade = 2 seconds total.
 }
 
 window.addEventListener("resize", () => { resizeCanvas(); createStars(); measureScroller(); });
