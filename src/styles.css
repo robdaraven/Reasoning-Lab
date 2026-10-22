@@ -75,3 +75,8 @@ body { color: var(--electric); font-family: var(--mono); }
 @media(prefers-reduced-motion:reduce){.logo-stage .crt-lines{animation:none}}
 
 .demo-logo { filter: none; opacity: 1; mix-blend-mode: normal; }
+
+/* Compact atom backdrop, preserving ellipse proportions and orbit timing. */
+.orbit { width:73.6%; height:27.2%; }
+.atom-ball { width:9.6px; height:9.6px; }
+.atom-nucleus { width:19.2px; height:19.2px; }
