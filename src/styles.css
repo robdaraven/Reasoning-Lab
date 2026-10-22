@@ -59,3 +59,10 @@ body { color: var(--electric); font-family: var(--mono); }
 /* Centre the logo box reliably while its bounded translation animates. */
 .logo-stage { display: flex; justify-content: center; align-items: center; }
 .demo-logo { flex: none; }
+
+/* Clear the fixed ticker panel; keep the moving starfield behind the letters. */
+.scroll-window { background: transparent; border-color: transparent; box-shadow: none; }
+.scroll-window::before, .scroll-window::after { display: none; }
+/* Opaque lettering, retaining only the artwork's transparent background. */
+.demo-logo { opacity: 1; mix-blend-mode: normal; }
+.atom-ball { position: absolute; width: 12px; height: 12px; border-radius: 50%; transform: translate(-50%, -50%); background: radial-gradient(circle at 30% 25%, #fff 0%, #b8e5ff 25%, #4fa9ff 60%, #123a88 100%); box-shadow: 0 0 8px #4fa9ff, 0 0 16px #4fa9ff80; pointer-events: none; }

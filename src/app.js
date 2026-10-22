@@ -6,6 +6,10 @@ const scrollTrack = document.querySelector("#scrollTrack");
 const logo = document.querySelector(".demo-logo");
 const logoStage = document.querySelector(".logo-stage");
 const orbitSpheres = [...document.querySelectorAll(".orbit-sphere")];
+const atomBall = document.createElement("span");
+atomBall.className = "atom-ball";
+atomBall.setAttribute("aria-hidden", "true");
+document.querySelector(".orbit-one").appendChild(atomBall);
 const sphereStates = [];
 const stars = [];
 const decompressionScreen = document.querySelector("#decompressionScreen");
@@ -140,7 +144,7 @@ function createStars() {
 
 function drawStars(delta) {
   bufferContext.clearRect(0, 0, window.innerWidth, window.innerHeight);
-  drawRasterField();
+
   nextStarTwist -= delta;
   if (nextStarTwist <= 0) {
     starTwistDirection = Math.random() > 0.5 ? 1 : -1;
@@ -179,30 +183,6 @@ function drawStars(delta) {
     }
     bufferContext.fillStyle = `hsla(${hue}, 100%, 66%, ${alpha})`;
     bufferContext.fillRect(x, y, size, size);
-  }
-}
-
-function drawRasterField() {
-  if (!tickerBounds) return;
-  const width = window.innerWidth;
-  const bands = 8;
-  for (let band = 0; band < bands; band += 1) {
-    const baseY = tickerBounds.top + tickerBounds.height * (0.08 + band * 0.12);
-    const wave = Math.sin(frame * 0.06 + band * 0.9) * 5;
-    const hue = 190 + ((band * 24 + frame * 0.35) % 170);
-    const gradient = bufferContext.createLinearGradient(0, baseY - 8, width, baseY + 8);
-    gradient.addColorStop(0, `hsla(${hue}, 100%, 62%, 0)`);
-    gradient.addColorStop(0.18, `hsla(${hue}, 100%, 62%, .26)`);
-    gradient.addColorStop(.5, `hsla(${hue + 22}, 100%, 72%, .82)`);
-    gradient.addColorStop(.82, `hsla(${hue}, 100%, 62%, .26)`);
-    gradient.addColorStop(1, `hsla(${hue}, 100%, 62%, 0)`);
-    bufferContext.save();
-    bufferContext.translate(0, wave);
-    bufferContext.fillStyle = gradient;
-    bufferContext.shadowBlur = 22;
-    bufferContext.shadowColor = `hsl(${hue}, 100%, 62%)`;
-    bufferContext.fillRect(0, baseY, width, 7);
-    bufferContext.restore();
   }
 }
 
@@ -283,6 +263,9 @@ function animate(now) {
   lastTime = now;
   if (!paused) {
     frame += delta;
+    const atomPhase = flipReducedMotion.matches ? 0 : frame * Math.PI * 2 / 480;
+    atomBall.style.left = `${50 + 50 * Math.cos(atomPhase)}%`;
+    atomBall.style.top = `${50 + 50 * Math.sin(atomPhase)}%`;
     drawStars(delta);
     const travelProgress = (1 + Math.sin(frame * 0.01)) / 2;
     const horizontalBounce = logoLeftX + (logoRightX - logoLeftX) * travelProgress;
@@ -328,10 +311,10 @@ async function loadScrollText() {
   try {
     const response = await fetch("src/scrolltext.txt");
     if (!response.ok) throw new Error("Scroll text unavailable");
-    setScrollText(`${(await response.text()).trim().replace(/\s+/g, " ")}     ✦     `);
+    setScrollText(`${(await response.text()).trim().replace(/\s+/g, " ")}     âœ¦     `);
     scrollPosition = scrollTrack.parentElement.offsetWidth;
   } catch {
-    setScrollText("WELCOME TO THE MYSTIX DEMO     ✦     AMIGA 500 ON THE DESK, DISKS SPINNING, MONITOR HUMMING, WAITING FOR THE NEXT DEMO TO LOAD     ✦     GREETINGS TO THE CODERS, GRAPHICS ARTISTS, MUSICIANS, SWAPPERS, AND EVERYONE WHO MADE A SMALL COMPUTER FEEL LIKE A PORTAL     ✦     KEEP THE SCENE MOVING     ");
+    setScrollText("WELCOME TO THE MYSTIX DEMO     âœ¦     AMIGA 500 ON THE DESK, DISKS SPINNING, MONITOR HUMMING, WAITING FOR THE NEXT DEMO TO LOAD     âœ¦     GREETINGS TO THE CODERS, GRAPHICS ARTISTS, MUSICIANS, SWAPPERS, AND EVERYONE WHO MADE A SMALL COMPUTER FEEL LIKE A PORTAL     âœ¦     KEEP THE SCENE MOVING     ");
   }
 }
 
