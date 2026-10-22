@@ -224,6 +224,23 @@ function measureLogoArtwork() {
     imageContext.drawImage(source, 0, 0);
     const pixels = imageContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
     const { data } = pixels;
+    // Flood-fill only exterior near-black background; preserve enclosed black detail.
+    const w=imageCanvas.width,h=imageCanvas.height,seen=new Uint8Array(w*h),queue=new Uint32Array(w*h);
+    let head=0,tail=0;
+    function visit(p){
+      if(seen[p])return;seen[p]=1;
+      const i=p*4;
+      if(Math.max(data[i],data[i+1],data[i+2])<=24)queue[tail++]=p;
+    }
+    for(let x=0;x<w;x++){visit(x);visit((h-1)*w+x);}
+    for(let y=0;y<h;y++){visit(y*w);visit(y*w+w-1);}
+    while(head<tail){
+      const p=queue[head++],x=p%w,y=Math.floor(p/w);data[p*4+3]=0;
+      if(x>0)visit(p-1);if(x+1<w)visit(p+1);
+      if(y>0)visit(p-w);if(y+1<h)visit(p+w);
+    }
+    imageContext.putImageData(pixels,0,0);
+    logo.src=imageCanvas.toDataURL('image/png');
     let inkLeft = imageCanvas.width, inkRight = 0;
     for (let index = 0; index < data.length; index += 4) {
       const brightness = Math.max(data[index], data[index + 1], data[index + 2]);
