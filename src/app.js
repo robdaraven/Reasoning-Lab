@@ -6,12 +6,49 @@ const scrollTrack = document.querySelector("#scrollTrack");
 const logo = document.querySelector(".demo-logo");
 const logoStage = document.querySelector(".logo-stage");
 const orbitSpheres = [...document.querySelectorAll(".orbit-sphere")];
-const atomBall = document.createElement("span");
-atomBall.className = "atom-ball";
-atomBall.setAttribute("aria-hidden", "true");
-document.querySelector(".orbit-one").appendChild(atomBall);
-const secondAtomBall = atomBall.cloneNode();
-document.querySelector(".orbit-two").appendChild(secondAtomBall);
+const atomCanvas=document.createElement('canvas');
+atomCanvas.className='atom-model';atomCanvas.setAttribute('aria-hidden','true');
+logoStage.prepend(atomCanvas);
+const atomContext=atomCanvas.getContext('2d');
+let atomWidth=0,atomHeight=0;
+function sizeAtom(){
+  atomWidth=logoStage.clientWidth;atomHeight=logoStage.clientHeight;
+  const d=Math.min(devicePixelRatio||1,2);
+  atomCanvas.width=atomWidth*d;atomCanvas.height=atomHeight*d;
+  atomContext.setTransform(d,0,0,d,0,0);
+}
+function drawAtom(){
+  const c=atomContext,w=atomWidth,h=atomHeight;
+  c.clearRect(0,0,w,h);
+  const radius=Math.min(w*.34,h*.43),t=flipReducedMotion.matches?0:frame*Math.PI*2/240;
+  const project=(x,y,z)=>{const scale=1+z*.18;return {x:w/2+x*radius*scale,y:h/2+y*radius*scale,z,scale};};
+  const orbit=(angle,plane)=>{
+    const x=Math.cos(angle),v=Math.sin(angle),tilt=.6,turn=plane*Math.PI/3;
+    const y=v*Math.sin(tilt),z=v*Math.cos(tilt);
+    return project(x*Math.cos(turn)-y*Math.sin(turn),x*Math.sin(turn)+y*Math.cos(turn),z);
+  };
+  const bodies=[];
+  for(let plane=0;plane<3;plane++){
+    for(let i=0;i<96;i++){
+      const a=orbit(i*Math.PI/48,plane),b=orbit((i+1)*Math.PI/48,plane);
+      c.strokeStyle=`rgba(79,169,255,${.16+(a.z+1)*.13})`;c.lineWidth=1;
+      c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();
+    }
+    if(plane<2){const p=orbit(t+plane*Math.PI,plane);bodies.push({...p,r:Math.max(4,radius*.035)*p.scale});}
+  }
+  // Close-packed nucleus, slowly turning to reveal its rounded structure.
+  for(let i=0;i<13;i++){
+    const y=1-2*(i+.5)/13,a=i*2.399963+t*.08,k=Math.sqrt(1-y*y);
+    const p=project(Math.cos(a)*k*.12,y*.12,Math.sin(a)*k*.12);
+    bodies.push({...p,r:radius*.067*p.scale});
+  }
+  bodies.sort((a,b)=>a.z-b.z).forEach(p=>{
+    const g=c.createRadialGradient(p.x-p.r*.3,p.y-p.r*.35,p.r*.05,p.x,p.y,p.r);
+    g.addColorStop(0,'#ffffff');g.addColorStop(.25,'#b8e5ff');g.addColorStop(.65,'#4fa9ff');g.addColorStop(1,'#123a88');
+    c.fillStyle=g;c.shadowColor='#4fa9ff';c.shadowBlur=p.r*.55;
+    c.beginPath();c.arc(p.x,p.y,p.r,0,Math.PI*2);c.fill();c.shadowBlur=0;
+  });
+}
 const sphereStates = [];
 const stars = [];
 const decompressionScreen = document.querySelector("#decompressionScreen");
@@ -301,12 +338,7 @@ function animate(now) {
   lastTime = now;
   if (!paused) {
     frame += delta;
-    const atomPhase = flipReducedMotion.matches ? 0 : frame * Math.PI * 2 / 240;
-    atomBall.style.left = `${50 + 50 * Math.cos(atomPhase)}%`;
-    atomBall.style.top = `${50 + 50 * Math.sin(atomPhase)}%`;
-    const secondPhase = atomPhase + Math.PI;
-    secondAtomBall.style.left = `${50 + 50 * Math.cos(secondPhase)}%`;
-    secondAtomBall.style.top = `${50 + 50 * Math.sin(secondPhase)}%`;
+    drawAtom();
     drawStars(delta);
     const travelProgress = (1 + Math.sin(frame * 0.01)) / 2;
     const horizontalBounce = logoLeftX + (logoRightX - logoLeftX) * travelProgress;
@@ -394,7 +426,7 @@ function finishIntro() {
   }, 400); // 400ms decrunching + 100ms fade = 500ms total.
 }
 
-window.addEventListener("resize", () => { resizeCanvas(); createStars(); measureScroller(); measureLogoTravel(); });
+window.addEventListener("resize", () => { resizeCanvas(); sizeAtom(); createStars(); measureScroller(); measureLogoTravel(); });
 document.fonts.ready.then(() => { measureScroller(); measureLogoTravel(); });
 logo.addEventListener("load", measureLogoTravel);
 document.addEventListener("visibilitychange", syncAnimation);
@@ -406,6 +438,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 resizeCanvas();
+sizeAtom();
 createStars();
 createOrbitSpheres();
 initializeSphereMotion();
