@@ -284,7 +284,7 @@ function animate(now) {
   lastTime = now;
   if (!paused) {
     frame += delta;
-    const atomPhase = flipReducedMotion.matches ? 0 : frame * Math.PI * 2 / 480;
+    const atomPhase = flipReducedMotion.matches ? 0 : frame * Math.PI * 2 / 240;
     atomBall.style.left = `${50 + 50 * Math.cos(atomPhase)}%`;
     atomBall.style.top = `${50 + 50 * Math.sin(atomPhase)}%`;
     const secondPhase = atomPhase + Math.PI;
@@ -335,10 +335,10 @@ async function loadScrollText() {
   try {
     const response = await fetch("src/scrolltext.txt");
     if (!response.ok) throw new Error("Scroll text unavailable");
-    setScrollText(`${(await response.text()).trim().replace(/\s+/g, " ")}     âœ¦     `);
+    setScrollText(`${(await response.text()).trim().replace(/\s+/g, " ")}     Ã¢Å“Â¦     `);
     scrollPosition = scrollTrack.parentElement.offsetWidth;
   } catch {
-    setScrollText("WELCOME TO THE MYSTIX DEMO     âœ¦     AMIGA 500 ON THE DESK, DISKS SPINNING, MONITOR HUMMING, WAITING FOR THE NEXT DEMO TO LOAD     âœ¦     GREETINGS TO THE CODERS, GRAPHICS ARTISTS, MUSICIANS, SWAPPERS, AND EVERYONE WHO MADE A SMALL COMPUTER FEEL LIKE A PORTAL     âœ¦     KEEP THE SCENE MOVING     ");
+    setScrollText("WELCOME TO THE MYSTIX DEMO     Ã¢Å“Â¦     AMIGA 500 ON THE DESK, DISKS SPINNING, MONITOR HUMMING, WAITING FOR THE NEXT DEMO TO LOAD     Ã¢Å“Â¦     GREETINGS TO THE CODERS, GRAPHICS ARTISTS, MUSICIANS, SWAPPERS, AND EVERYONE WHO MADE A SMALL COMPUTER FEEL LIKE A PORTAL     Ã¢Å“Â¦     KEEP THE SCENE MOVING     ");
   }
 }
 
