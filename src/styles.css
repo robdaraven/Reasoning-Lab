@@ -60,9 +60,16 @@ body { color: var(--electric); font-family: var(--mono); }
 .logo-stage { display: flex; justify-content: center; align-items: center; }
 .demo-logo { flex: none; }
 
-/* Clear the fixed ticker panel; keep the moving starfield behind the letters. */
-.scroll-window { background: transparent; border-color: transparent; box-shadow: none; }
-.scroll-window::before, .scroll-window::after { display: none; }
 /* Opaque lettering, retaining only the artwork's transparent background. */
 .demo-logo { opacity: 1; mix-blend-mode: normal; }
 .atom-ball { position: absolute; width: 12px; height: 12px; border-radius: 50%; transform: translate(-50%, -50%); background: radial-gradient(circle at 30% 25%, #fff 0%, #b8e5ff 25%, #4fa9ff 60%, #123a88 100%); box-shadow: 0 0 8px #4fa9ff, 0 0 16px #4fa9ff80; pointer-events: none; }
+
+/* The scan lines belong to the atom stage, not the scrolling message. */
+.logo-stage .crt-lines { position: absolute; z-index: 0; inset: 0; opacity: .16; border-radius: 50%; mask-image: radial-gradient(ellipse, #000 35%, transparent 72%); animation: atom-scan 12s linear infinite; }
+@keyframes atom-scan { from { background-position: 0 0; } to { background-position: 0 40px; } }
+.orbit { width: 92%; height: 34%; opacity: 1; border-color: #4fa9ff70; }
+.orbit-one { transform: rotate(-60deg); }
+.orbit-two { transform: rotate(60deg); }
+.orbit-three { transform: rotate(0deg); }
+.atom-nucleus { position: absolute; z-index: 1; width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #8dd7ff 35%, #245eb2 80%); box-shadow: 0 0 22px #4fa9ff88; }
+@media(prefers-reduced-motion:reduce){.logo-stage .crt-lines{animation:none}}
