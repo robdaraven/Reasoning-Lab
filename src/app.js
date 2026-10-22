@@ -213,7 +213,7 @@ function drawRasterField() {
   }
 }
 
-function removeLogoBackground() {
+function measureLogoArtwork() {
   const source = new Image();
   source.src = "src/logo.jpeg";
   source.onload = () => {
@@ -227,8 +227,7 @@ function removeLogoBackground() {
     let inkLeft = imageCanvas.width, inkRight = 0;
     for (let index = 0; index < data.length; index += 4) {
       const brightness = Math.max(data[index], data[index + 1], data[index + 2]);
-      if (brightness < 18) data[index + 3] = 0;
-      else {
+      if (brightness >= 18) {
         const x = (index / 4) % imageCanvas.width;
         inkLeft = Math.min(inkLeft, x);
         inkRight = Math.max(inkRight, x + 1);
@@ -238,11 +237,6 @@ function removeLogoBackground() {
       logoInkLeft = inkLeft / imageCanvas.width;
       logoInkRight = inkRight / imageCanvas.width;
     }
-    imageContext.putImageData(pixels, 0, 0);
-    const transparentLogo = imageCanvas.toDataURL("image/png");
-    document.querySelectorAll(".demo-logo, .logo-color-slices img").forEach((image) => {
-      image.src = transparentLogo;
-    });
   };
 }
 
@@ -398,7 +392,7 @@ resizeCanvas();
 createStars();
 createOrbitSpheres();
 initializeSphereMotion();
-removeLogoBackground();
+measureLogoArtwork();
 loadScrollText();
 finishIntro();
 

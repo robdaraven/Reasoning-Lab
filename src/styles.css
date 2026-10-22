@@ -16,7 +16,7 @@ body { color: var(--electric); font-family: var(--mono); }
 .demo-header { display: flex; align-items: center; justify-content: space-between; width: min(1320px, calc(100% - 72px)); margin: 0 auto; padding: 28px 0; border-bottom: 1px solid rgba(79, 169, 255, .25); color: var(--blue); font-family: var(--pixel); font-size: 9px; text-shadow: 0 0 8px rgba(79, 169, 255, .8); }
 .header-center { color: #84c8ff; opacity: .75; }
 .logo-stage { position: relative; z-index: 1; display: grid; place-items: center; height: min(58vh, 620px); min-height: 0; margin: auto; width: min(1040px, 82vw); }
-.demo-logo { scale: 1.3436928 1.28; position: relative; z-index: 2; display: block; width: min(900px, 88vw); max-height: 54vh; object-fit: contain; mix-blend-mode: screen; filter: drop-shadow(0 0 12px rgba(64, 157, 255, .65)) drop-shadow(0 0 34px rgba(45, 71, 255, .4)); will-change: transform, translate; }
+.demo-logo { scale: 1.28; position: relative; z-index: 2; display: block; width: min(900px, 88vw); max-height: 54vh; object-fit: contain; mix-blend-mode: normal; filter: none; will-change: transform, translate; }
 .logo-glow { position: absolute; z-index: 1; width: 72%; height: 42%; border-radius: 50%; background: rgba(35, 98, 231, .22); filter: blur(65px); }
 .orbit { position: absolute; z-index: 1; border: 1px solid rgba(79, 169, 255, .3); border-radius: 50%; transform: rotate(-22deg); box-shadow: 0 0 10px rgba(79, 169, 255, .22); }
 .orbit-one { width: 92%; height: 33%; }
@@ -73,3 +73,5 @@ body { color: var(--electric); font-family: var(--mono); }
 .orbit-three { transform: rotate(0deg); }
 .atom-nucleus { position: absolute; z-index: 1; width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #8dd7ff 35%, #245eb2 80%); box-shadow: 0 0 22px #4fa9ff88; }
 @media(prefers-reduced-motion:reduce){.logo-stage .crt-lines{animation:none}}
+
+.demo-logo { filter: none; opacity: 1; mix-blend-mode: normal; }
