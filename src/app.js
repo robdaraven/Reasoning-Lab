@@ -8,11 +8,14 @@ const logoStage = document.querySelector(".logo-stage");
 const orbitSpheres = [...document.querySelectorAll(".orbit-sphere")];
 const atomCanvas=document.createElement('canvas');
 atomCanvas.className='atom-model';atomCanvas.setAttribute('aria-hidden','true');
+// Anchor the atom to the viewport so the entire model can roam independently.
+atomCanvas.style.position='fixed';
 logoStage.prepend(atomCanvas);
 const atomContext=atomCanvas.getContext('2d');
 let atomWidth=0,atomHeight=0;
 function sizeAtom(){
-  atomWidth=logoStage.clientWidth;atomHeight=logoStage.clientHeight;
+  atomWidth=document.documentElement.clientWidth;atomHeight=window.innerHeight;
+  atomCanvas.style.width=`${atomWidth}px`;atomCanvas.style.height=`${atomHeight}px`;
   const d=Math.min(devicePixelRatio||1,2);
   atomCanvas.width=atomWidth*d;atomCanvas.height=atomHeight*d;
   atomContext.setTransform(d,0,0,d,0,0);
@@ -20,8 +23,18 @@ function sizeAtom(){
 function drawAtom(){
   const c=atomContext,w=atomWidth,h=atomHeight;
   c.clearRect(0,0,w,h);
-  const radius=Math.min(w*.34,h*.43),t=flipReducedMotion.matches?0:frame*Math.PI*2/240;
-  const project=(x,y,z)=>{const scale=1+z*.18;return {x:w/2+x*radius*scale,y:h/2+y*radius*scale,z,scale};};
+  const upperHeight=h/2,padding=Math.min(12,w*.02,upperHeight*.06);
+  // Reserve the outer electrons and their glow, not just the orbit centre.
+  const radius=Math.max(1,Math.min(w*.26,upperHeight*.30,(w-2*padding)/2.5,(upperHeight-2*padding)/2.5));
+  const extent=radius*1.25;
+  const phase=frame*.01;
+  // The logo uses (1 + sin(phase))/2: this mirrors its direction and turns.
+  const horizontal=flipReducedMotion.matches?.5:(1-Math.sin(phase))/2;
+  const vertical=flipReducedMotion.matches?.5:(1-Math.cos(frame*.032))/2;
+  const centerX=padding+extent+Math.max(0,w-2*(padding+extent))*horizontal;
+  const centerY=padding+extent+Math.max(0,upperHeight-2*(padding+extent))*vertical;
+  const t=flipReducedMotion.matches?0:frame*Math.PI*2/240;
+  const project=(x,y,z)=>{const scale=1+z*.18;return {x:centerX+x*radius*scale,y:centerY+y*radius*scale,z,scale};};
   const orbit=(angle,plane)=>{
     const x=Math.cos(angle),v=Math.sin(angle),tilt=.6,turn=plane*Math.PI/3;
     const y=v*Math.sin(tilt),z=v*Math.cos(tilt);
