@@ -20,17 +20,50 @@ function sizeAtom(){
   atomCanvas.width=atomWidth*d;atomCanvas.height=atomHeight*d;
   atomContext.setTransform(d,0,0,d,0,0);
 }
-function drawAtom(){
+// Two damped stages steer toward fresh destinations without snapping velocity.
+// Normalised coordinates keep the entire path bounded when the viewport resizes.
+const atomMotion = { x: .5, y: .5, leadX: .5, leadY: .5,
+  targetX: .5, targetY: .5, untilTurn: 0 };
+function updateAtomMotion(delta) {
+  if (flipReducedMotion.matches) return;
+  let remaining = Math.max(0, Math.min(delta / 60, .1));
+  while (remaining > 0) {
+    if (atomMotion.untilTurn <= 0) {
+      const feint = Math.random() < .3;
+      const bound = value => Math.max(.04, Math.min(.96, value));
+      // Sometimes double back briefly, then set off on another longer excursion.
+      atomMotion.targetX = feint
+        ? bound(atomMotion.x - (atomMotion.leadX - atomMotion.x) * 2 + (Math.random() - .5) * .2)
+        : .04 + Math.random() * .92;
+      atomMotion.targetY = feint
+        ? bound(atomMotion.y - (atomMotion.leadY - atomMotion.y) * 2 + (Math.random() - .5) * .3)
+        : .04 + Math.random() * .92;
+      atomMotion.untilTurn = feint ? .6 + Math.random() * .6 : 1.4 + Math.random() * 2.2;
+    }
+    const seconds = Math.min(remaining, atomMotion.untilTurn);
+    const rate = 2.4, decay = Math.exp(-rate * seconds);
+    // Exact integration: consistent at different refresh rates. Both stages stay
+    // inside the target bounds, avoiding hard edge bounces or overshooting.
+    for (const [position, lead, target] of [['x', 'leadX', 'targetX'], ['y', 'leadY', 'targetY']]) {
+      const offset = atomMotion[lead] - atomMotion[target];
+      atomMotion[position] = atomMotion[target]
+        + (atomMotion[position] - atomMotion[target] + rate * seconds * offset) * decay;
+      atomMotion[lead] = atomMotion[target] + offset * decay;
+    }
+    atomMotion.untilTurn -= seconds;
+    remaining -= seconds;
+  }
+}
+function drawAtom(delta){
+  updateAtomMotion(delta);
   const c=atomContext,w=atomWidth,h=atomHeight;
   c.clearRect(0,0,w,h);
   const upperHeight=h/2,padding=Math.min(12,w*.02,upperHeight*.06);
   // Reserve the outer electrons and their glow, not just the orbit centre.
   const radius=Math.max(1,Math.min(w*.26,upperHeight*.30,(w-2*padding)/2.5,(upperHeight-2*padding)/2.5));
-  const extent=radius*1.25;
-  const phase=frame*.01;
-  // The logo uses (1 + sin(phase))/2: this mirrors its direction and turns.
-  const horizontal=flipReducedMotion.matches?.5:(1-Math.sin(phase))/2;
-  const vertical=flipReducedMotion.matches?.5:(1-Math.cos(frame*.032))/2;
+  const extent=Math.max(radius*1.25, radius*1.18+10);
+  const horizontal=flipReducedMotion.matches?.5:atomMotion.x;
+  const vertical=flipReducedMotion.matches?.5:atomMotion.y;
   const centerX=padding+extent+Math.max(0,w-2*(padding+extent))*horizontal;
   const centerY=padding+extent+Math.max(0,upperHeight-2*(padding+extent))*vertical;
   const t=flipReducedMotion.matches?0:frame*Math.PI*2/240;
@@ -351,7 +384,7 @@ function animate(now) {
   lastTime = now;
   if (!paused) {
     frame += delta;
-    drawAtom();
+    drawAtom(delta);
     drawStars(delta);
     const travelProgress = (1 + Math.sin(frame * 0.01)) / 2;
     const horizontalBounce = logoLeftX + (logoRightX - logoLeftX) * travelProgress;
