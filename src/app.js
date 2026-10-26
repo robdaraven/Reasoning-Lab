@@ -430,10 +430,10 @@ async function loadScrollText() {
   try {
     const response = await fetch("src/scrolltext.txt");
     if (!response.ok) throw new Error("Scroll text unavailable");
-    setScrollText(`${(await response.text()).trim().replace(/\s+/g, " ")}     Ã¢Å“Â¦     `);
+    setScrollText(`${(await response.text()).trim().replace(/\s+/g, " ")}     ✦     `);
     scrollPosition = scrollTrack.parentElement.offsetWidth;
   } catch {
-    setScrollText("WELCOME TO THE MYSTIX DEMO     Ã¢Å“Â¦     AMIGA 500 ON THE DESK, DISKS SPINNING, MONITOR HUMMING, WAITING FOR THE NEXT DEMO TO LOAD     Ã¢Å“Â¦     GREETINGS TO THE CODERS, GRAPHICS ARTISTS, MUSICIANS, SWAPPERS, AND EVERYONE WHO MADE A SMALL COMPUTER FEEL LIKE A PORTAL     Ã¢Å“Â¦     KEEP THE SCENE MOVING     ");
+    setScrollText("WELCOME TO THE MYSTIX DEMO     ✦     AMIGA 500 ON THE DESK, DISKS SPINNING, MONITOR HUMMING, WAITING FOR THE NEXT DEMO TO LOAD     ✦     GREETINGS TO THE CODERS, GRAPHICS ARTISTS, MUSICIANS, SWAPPERS, AND EVERYONE WHO MADE A SMALL COMPUTER FEEL LIKE A PORTAL     ✦     KEEP THE SCENE MOVING     ");
   }
 }
 
